@@ -1,0 +1,1 @@
+/Users/shivam/.local/bin/trivy fs --list-all-pkgs --scanners=misconfig,vuln,secret,license --severity=CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN --format=json --output=/Users/shivam/Library/Caches/JetBrains/GoLand2025.1/Trivy/trivy-0c72d14d-656f-4144-a0d5-8d3aeab24834.json /Users/shivam/airline-booking-system

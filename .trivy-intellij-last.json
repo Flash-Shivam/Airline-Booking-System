@@ -1,0 +1,275 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-01-08T15:50:04.988934+05:30",
+  "ArtifactName": "/Users/shivam/airline-booking-system",
+  "ArtifactType": "filesystem",
+  "Metadata": {
+    "ImageConfig": {
+      "architecture": "",
+      "created": "0001-01-01T00:00:00Z",
+      "os": "",
+      "rootfs": {
+        "type": "",
+        "diff_ids": null
+      },
+      "config": {}
+    }
+  },
+  "Results": [
+    {
+      "Target": "go.mod",
+      "Class": "lang-pkgs",
+      "Type": "gomod",
+      "Packages": [
+        {
+          "ID": "airline-booking-system",
+          "Name": "airline-booking-system",
+          "Identifier": {
+            "PURL": "pkg:golang/airline-booking-system",
+            "UID": "bc5455b43fb971f1"
+          },
+          "Relationship": "root",
+          "DependsOn": [
+            "github.com/go-redis/redis/v8@v8.11.5",
+            "github.com/gorilla/mux@v1.8.0",
+            "github.com/lib/pq@v1.10.9",
+            "github.com/segmentio/kafka-go@v0.4.42"
+          ],
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/go-redis/redis/v8@v8.11.5",
+          "Name": "github.com/go-redis/redis/v8",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/go-redis/redis/v8@v8.11.5",
+            "UID": "6ef03a728f6d762d"
+          },
+          "Version": "v8.11.5",
+          "Licenses": [
+            "BSD-2-Clause"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "github.com/cespare/xxhash/v2@v2.1.2",
+            "github.com/dgryski/go-rendezvous@v0.0.0-20200823014737-9f7001d12a5f"
+          ],
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/gorilla/mux@v1.8.0",
+          "Name": "github.com/gorilla/mux",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/gorilla/mux@v1.8.0",
+            "UID": "ae4b10b5e3a33b19"
+          },
+          "Version": "v1.8.0",
+          "Licenses": [
+            "BSD-3-Clause"
+          ],
+          "Relationship": "direct",
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/lib/pq@v1.10.9",
+          "Name": "github.com/lib/pq",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/lib/pq@v1.10.9",
+            "UID": "58e98aadacf82626"
+          },
+          "Version": "v1.10.9",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/segmentio/kafka-go@v0.4.42",
+          "Name": "github.com/segmentio/kafka-go",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/segmentio/kafka-go@v0.4.42",
+            "UID": "fe3b71cd478b1556"
+          },
+          "Version": "v0.4.42",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "github.com/klauspost/compress@v1.15.9",
+            "github.com/pierrec/lz4/v4@v4.1.15"
+          ],
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/cespare/xxhash/v2@v2.1.2",
+          "Name": "github.com/cespare/xxhash/v2",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/cespare/xxhash/v2@v2.1.2",
+            "UID": "6b504bdefcf5b3f2"
+          },
+          "Version": "v2.1.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/dgryski/go-rendezvous@v0.0.0-20200823014737-9f7001d12a5f",
+          "Name": "github.com/dgryski/go-rendezvous",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/dgryski/go-rendezvous@v0.0.0-20200823014737-9f7001d12a5f",
+            "UID": "cbde9ada0d8c2348"
+          },
+          "Version": "v0.0.0-20200823014737-9f7001d12a5f",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/klauspost/compress@v1.15.9",
+          "Name": "github.com/klauspost/compress",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/klauspost/compress@v1.15.9",
+            "UID": "4ad5127db4f6a3bc"
+          },
+          "Version": "v1.15.9",
+          "Licenses": [
+            "Apache-2.0",
+            "BSD-3-Clause",
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Layer": {}
+        },
+        {
+          "ID": "github.com/pierrec/lz4/v4@v4.1.15",
+          "Name": "github.com/pierrec/lz4/v4",
+          "Identifier": {
+            "PURL": "pkg:golang/github.com/pierrec/lz4/v4@v4.1.15",
+            "UID": "4b89ca95a0ef8e91"
+          },
+          "Version": "v4.1.15",
+          "Licenses": [
+            "BSD-3-Clause"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Layer": {}
+        }
+      ]
+    },
+    {
+      "Target": "go.mod",
+      "Class": "license",
+      "Licenses": [
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/go-redis/redis/v8",
+          "FilePath": "go.mod",
+          "Name": "BSD-2-Clause",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/gorilla/mux",
+          "FilePath": "go.mod",
+          "Name": "BSD-3-Clause",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/lib/pq",
+          "FilePath": "go.mod",
+          "Name": "MIT",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/segmentio/kafka-go",
+          "FilePath": "go.mod",
+          "Name": "MIT",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/cespare/xxhash/v2",
+          "FilePath": "go.mod",
+          "Name": "MIT",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/dgryski/go-rendezvous",
+          "FilePath": "go.mod",
+          "Name": "MIT",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/klauspost/compress",
+          "FilePath": "go.mod",
+          "Name": "Apache-2.0",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/klauspost/compress",
+          "FilePath": "go.mod",
+          "Name": "BSD-3-Clause",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/klauspost/compress",
+          "FilePath": "go.mod",
+          "Name": "MIT",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "github.com/pierrec/lz4/v4",
+          "FilePath": "go.mod",
+          "Name": "BSD-3-Clause",
+          "Text": "",
+          "Confidence": 1,
+          "Link": ""
+        }
+      ]
+    }
+  ]
+}
