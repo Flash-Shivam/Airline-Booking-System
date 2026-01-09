@@ -292,10 +292,10 @@ docker-compose up -d postgres redis zookeeper kafka otel-collector jaeger promet
 
 ## Future Enhancements
 
-- [ ] Rate limiting and API throttling
-- [ ] Circuit breakers for external services
-- [ ] Distributed tracing (Jaeger)
-- [ ] Metrics collection (Prometheus)
+- [x] Rate limiting and API throttling
+- [] Circuit breakers for external services
+- [x] Distributed tracing (Jaeger)
+- [x] Metrics collection (Prometheus)
 - [ ] Waitlist system for sold-out flights
 - [ ] Email/SMS notifications
 - [ ] Multi-city booking support
