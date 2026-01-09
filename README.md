@@ -219,6 +219,7 @@ go build -o bin/server cmd/server/main.go
 - Kafka event monitoring for business metrics
 - Redis cache hit/miss ratios
  - Distributed tracing with OpenTelemetry (Jaeger via OTel Collector)
+ - Metrics collection with Prometheus (API throughput, latency, error rate)
 
 ### Distributed Tracing
 
@@ -261,6 +262,33 @@ go run cmd/server/main.go
 
 - URL: `http://localhost:16686`
 - Select the `airline-booking-service` service to explore traces.
+
+### Metrics (Prometheus)
+
+This project exposes **Prometheus metrics** at the `/metrics` endpoint on the same port as the API (`8080`).
+
+Key HTTP metrics:
+
+- `http_requests_total{method, path, code}`: total requests, labeled by method, path, and status text.
+- `http_request_duration_seconds{method, path}`: histogram of request latency.
+- `http_in_flight_requests`: current number of in-flight HTTP requests.
+
+#### Run with Prometheus
+
+1. Start infra + Prometheus (optionally with tracing stack as well):
+
+```bash
+docker-compose up -d postgres redis zookeeper kafka otel-collector jaeger prometheus
+```
+
+2. Run the application (with or without tracing as described above).
+
+3. Open Prometheus UI:
+
+- URL: `http://localhost:9090`
+- Example queries:
+  - `sum(rate(http_requests_total[1m])) by (method, path, code)` – request throughput & error rate.
+  - `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path))` – 95th percentile latency per path.
 
 ## Future Enhancements
 

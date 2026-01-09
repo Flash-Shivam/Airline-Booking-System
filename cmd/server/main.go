@@ -22,6 +22,8 @@ import (
 	apptracing "airline-booking-system/pkg/tracing"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/time/rate"
 )
@@ -121,6 +123,9 @@ func main() {
 func setupRoutes(fh *handlers.FlightHandler, bh *handlers.BookingHandler) *mux.Router {
 	router := mux.NewRouter()
 
+	// Expose Prometheus metrics at /metrics
+	router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+
 	// API version prefix
 	api := router.PathPrefix("/api/v1").Subrouter()
 
@@ -142,6 +147,7 @@ func setupRoutes(fh *handlers.FlightHandler, bh *handlers.BookingHandler) *mux.R
 	}).Methods("GET")
 
 	// Add middleware (order matters)
+	router.Use(metricsMiddleware)
 	router.Use(loggingMiddleware)
 	router.Use(corsMiddleware)
 	router.Use(rateLimitMiddleware)
@@ -155,6 +161,83 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+	})
+}
+
+// metricsMiddleware records basic HTTP metrics for Prometheus:
+// - http_requests_total (by method, path, status)
+// - http_request_duration_seconds (histogram)
+// - http_in_flight_requests
+var (
+	httpRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests processed, labeled by status code, method, and path.",
+		},
+		[]string{"code", "method", "path"},
+	)
+
+	httpRequestDurationSeconds = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "Duration of HTTP requests in seconds.",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "path"},
+	)
+
+	httpInFlightRequests = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "http_in_flight_requests",
+			Help: "Current number of in-flight HTTP requests.",
+		},
+	)
+)
+
+func init() {
+	// Register metrics with the default registry.
+	prometheus.MustRegister(httpRequestsTotal, httpRequestDurationSeconds, httpInFlightRequests)
+}
+
+// statusRecordingResponseWriter wraps http.ResponseWriter to capture status code.
+type statusRecordingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *statusRecordingResponseWriter) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func metricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		httpInFlightRequests.Inc()
+		defer httpInFlightRequests.Dec()
+
+		srw := &statusRecordingResponseWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+
+		next.ServeHTTP(srw, r)
+
+		duration := time.Since(start).Seconds()
+		path := r.URL.Path
+		method := r.Method
+		code := srw.statusCode
+
+		httpRequestsTotal.WithLabelValues(
+			http.StatusText(code),
+			method,
+			path,
+		).Inc()
+
+		httpRequestDurationSeconds.WithLabelValues(
+			method,
+			path,
+		).Observe(duration)
 	})
 }
 
