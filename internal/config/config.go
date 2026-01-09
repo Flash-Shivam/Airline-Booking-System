@@ -13,6 +13,7 @@ type Config struct {
 	Redis    RedisConfig
 	Kafka    KafkaConfig
 	App      AppConfig
+	Tracing  TracingConfig
 }
 
 // ServerConfig holds HTTP server configuration
@@ -56,6 +57,15 @@ type AppConfig struct {
 	TopSearchesPercent float64
 }
 
+// TracingConfig holds distributed tracing configuration
+type TracingConfig struct {
+	Enabled      bool
+	ServiceName  string
+	Endpoint     string
+	Environment  string
+	SamplerRatio float64
+}
+
 // Load loads configuration from environment variables
 func Load() *Config {
 	return &Config{
@@ -89,6 +99,13 @@ func Load() *Config {
 			LockTTL:           getDurationEnv("LOCK_TTL", 5*time.Minute),
 			MaxCacheEntries:   getIntEnv("MAX_CACHE_ENTRIES", 1000),
 			TopSearchesPercent: getFloatEnv("TOP_SEARCHES_PERCENT", 0.4),
+		},
+		Tracing: TracingConfig{
+			Enabled:      getEnv("TRACING_ENABLED", "false") == "true",
+			ServiceName:  getEnv("TRACING_SERVICE_NAME", "airline-booking-service"),
+			Endpoint:     getEnv("TRACING_ENDPOINT", "http://localhost:4318"),
+			Environment:  getEnv("TRACING_ENVIRONMENT", "local"),
+			SamplerRatio: getFloatEnv("TRACING_SAMPLER_RATIO", 1.0),
 		},
 	}
 }

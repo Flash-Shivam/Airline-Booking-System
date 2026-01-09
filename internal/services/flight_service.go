@@ -9,6 +9,8 @@ import (
 	"airline-booking-system/internal/config"
 	"airline-booking-system/internal/models"
 	"airline-booking-system/internal/repositories"
+
+	"go.opentelemetry.io/otel"
 )
 
 // FlightRepository defines the persistence operations used by FlightService.
@@ -30,6 +32,7 @@ type FlightService struct {
 	flightRepo   FlightRepository
 	cacheService FlightCache
 	config       *config.AppConfig
+	tracerName   string
 }
 
 // NewFlightService creates a new flight service
@@ -38,11 +41,16 @@ func NewFlightService(flightRepo *repositories.FlightRepository, cacheService *c
 		flightRepo:   flightRepo,
 		cacheService: cacheService,
 		config:       config,
+		tracerName:   "airline-booking-system/flight-service",
 	}
 }
 
 // SearchFlights searches for flights with caching
 func (s *FlightService) SearchFlights(ctx context.Context, req *models.FlightSearchRequest) (*models.FlightSearchResponse, error) {
+	tr := otel.Tracer(s.tracerName)
+	ctx, span := tr.Start(ctx, "FlightService.SearchFlights")
+	defer span.End()
+
 	if !req.IsValid() {
 		return nil, fmt.Errorf("invalid search request")
 	}
@@ -79,11 +87,19 @@ func (s *FlightService) SearchFlights(ctx context.Context, req *models.FlightSea
 
 // GetFlightByID gets a flight by ID
 func (s *FlightService) GetFlightByID(ctx context.Context, id int64) (*models.Flight, error) {
+	tr := otel.Tracer(s.tracerName)
+	ctx, span := tr.Start(ctx, "FlightService.GetFlightByID")
+	defer span.End()
+
 	return s.flightRepo.GetFlightByID(ctx, id)
 }
 
 // CreateFlight creates a new flight
 func (s *FlightService) CreateFlight(ctx context.Context, flight *models.Flight) (*models.Flight, error) {
+	tr := otel.Tracer(s.tracerName)
+	ctx, span := tr.Start(ctx, "FlightService.CreateFlight")
+	defer span.End()
+
 	// Validate flight data
 	if flight.Source == "" || flight.Destination == "" || flight.AvailableSeats <= 0 || flight.TotalSeats <= 0 || flight.Price <= 0 {
 		return nil, fmt.Errorf("invalid flight data")

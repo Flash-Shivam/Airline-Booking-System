@@ -19,14 +19,32 @@ import (
 	"airline-booking-system/pkg/database"
 	"airline-booking-system/pkg/kafka"
 	"airline-booking-system/pkg/redis"
+	apptracing "airline-booking-system/pkg/tracing"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/time/rate"
 )
 
 func main() {
 	// Load configuration
 	cfg := config.Load()
+
+	// Initialize distributed tracing (no-op if disabled)
+	tracerCtx, cancelTracer := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelTracer()
+	shutdownTracer, err := apptracing.InitTracer(tracerCtx, &cfg.Tracing)
+	if err != nil {
+		log.Printf("Failed to initialize tracing: %v", err)
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := shutdownTracer(ctx); err != nil {
+				log.Printf("Error shutting down tracer provider: %v", err)
+			}
+		}()
+	}
 
 	// Initialize database
 	db, err := database.NewPostgresConnection(&cfg.Database)
@@ -68,8 +86,9 @@ func main() {
 
 	// Setup server
 	server := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
-		Handler:      router,
+		Addr: ":" + cfg.Server.Port,
+		// Wrap handler with OpenTelemetry middleware to create spans per request
+		Handler:      otelhttp.NewHandler(router, "http.server"),
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}

@@ -32,24 +32,26 @@ A high-performance airline booking system built in Go, implementing the system d
 
 ## Quick Start
 
-1. **Clone and setup infrastructure:**
+1. **Clone the repo:**
    ```bash
    git clone <repository>
    cd airline-booking-system
-   docker-compose up -d
    ```
-
 2. **Install dependencies:**
    ```bash
    go mod tidy
    ```
+3. **Run the application without tracing (local dev):**
+   - Start core infra (Postgres, Redis, Kafka, Zookeeper):
+     ```bash
+     docker-compose up -d postgres redis zookeeper kafka
+     ```
+   - Run the Go server:
+     ```bash
+     go run cmd/server/main.go
+     ```
 
-3. **Run the application:**
-   ```bash
-   go run cmd/server/main.go
-   ```
-
-The API will be available at `http://localhost:8080`
+The API will be available at `http://localhost:8080`.
 
 ## API Endpoints
 
@@ -194,13 +196,21 @@ go build -o bin/server cmd/server/main.go
 ```
 
 ### Docker Development
-```bash
-# Build and run
-docker-compose up --build
 
-# Run specific service
-docker-compose up postgres redis kafka
-```
+- **Build server binary:**
+  ```bash
+  go build -o bin/server cmd/server/main.go
+  ```
+
+- **Run infra only (no tracing):**
+  ```bash
+  docker-compose up -d postgres redis zookeeper kafka
+  ```
+
+- **Run infra + tracing stack:**
+  ```bash
+  docker-compose up -d postgres redis zookeeper kafka otel-collector jaeger
+  ```
 
 ## Monitoring & Observability
 
@@ -208,6 +218,49 @@ docker-compose up postgres redis kafka
 - Health checks for all dependencies
 - Kafka event monitoring for business metrics
 - Redis cache hit/miss ratios
+ - Distributed tracing with OpenTelemetry (Jaeger via OTel Collector)
+
+### Distributed Tracing
+
+Tracing is optional and controlled via environment variables:
+
+| Variable               | Default                         | Description |
+|------------------------|---------------------------------|-------------|
+| TRACING_ENABLED        | false                           | Enable distributed tracing when set to `true` |
+| TRACING_SERVICE_NAME   | airline-booking-service         | Service name reported to the tracer backend |
+| TRACING_ENDPOINT       | http://localhost:4318           | OTLP HTTP endpoint (e.g. OTel Collector) |
+| TRACING_ENVIRONMENT    | local                           | Deployment environment (local, staging, prod, ...) |
+| TRACING_SAMPLER_RATIO  | 1.0                             | Sampling ratio between 0.0 and 1.0 |
+
+When `TRACING_ENABLED=true`, the server:
+
+- Initializes an OpenTelemetry tracer provider with an OTLP HTTP exporter.
+- Wraps the HTTP router with OpenTelemetry middleware so each API call becomes a span.
+- Adds spans in core services (flight search and booking flows).
+
+#### Example: Run with Jaeger via OTel Collector
+
+This repository includes an OpenTelemetry Collector and Jaeger setup in `docker-compose.yml`.
+
+1. Start infra + tracing stack:
+
+```bash
+docker-compose up -d postgres redis zookeeper kafka otel-collector jaeger
+```
+
+2. Run the application with tracing enabled:
+
+```bash
+export TRACING_ENABLED=true
+export TRACING_SERVICE_NAME=airline-booking-service
+export TRACING_ENDPOINT=http://localhost:4318
+go run cmd/server/main.go
+```
+
+3. Generate some traffic (flight search, bookings, etc.), then open Jaeger UI:
+
+- URL: `http://localhost:16686`
+- Select the `airline-booking-service` service to explore traces.
 
 ## Future Enhancements
 

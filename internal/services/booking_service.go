@@ -12,6 +12,8 @@ import (
 	"airline-booking-system/internal/models"
 	"airline-booking-system/internal/repositories"
 	"airline-booking-system/pkg/kafka"
+
+	"go.opentelemetry.io/otel"
 )
 
 // BookingRepository defines persistence operations used by BookingService.
@@ -48,6 +50,7 @@ type BookingService struct {
 	cacheService  FlightCacheBooking
 	kafkaProducer Producer
 	config        *config.AppConfig
+	tracerName    string
 }
 
 // NewBookingService creates a new booking service
@@ -64,11 +67,16 @@ func NewBookingService(
 		cacheService:  cacheService,
 		kafkaProducer: kafkaProducer,
 		config:        config,
+		tracerName:    "airline-booking-system/booking-service",
 	}
 }
 
 // CreateBooking creates a new booking with distributed locking
 func (s *BookingService) CreateBooking(ctx context.Context, req *models.BookingRequest) (*models.BookingResponse, error) {
+	tr := otel.Tracer(s.tracerName)
+	ctx, span := tr.Start(ctx, "BookingService.CreateBooking")
+	defer span.End()
+
 	if !req.IsValid() {
 		return nil, fmt.Errorf("invalid booking request")
 	}
@@ -178,6 +186,10 @@ func (s *BookingService) CreateBooking(ctx context.Context, req *models.BookingR
 
 // processPaymentAsync simulates async payment processing
 func (s *BookingService) processPaymentAsync(ctx context.Context, bookingID int64, paymentRefID string, amount float64) {
+	tr := otel.Tracer(s.tracerName)
+	ctx, span := tr.Start(ctx, "BookingService.processPaymentAsync")
+	defer span.End()
+
 	// Simulate payment processing delay
 	time.Sleep(2 * time.Second)
 
