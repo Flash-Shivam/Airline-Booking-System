@@ -4,7 +4,7 @@ A high-performance airline booking system built in Go, implementing the system d
 
 ## Features
 
-- **Flight Search**: Fast search with Redis caching (1hr TTL, LRU eviction)
+- **Flight Search**: Fast search with Redis caching (1hr TTL)
 - **Booking System**: Distributed locking with Redis to prevent race conditions
 - **Payment Processing**: Asynchronous payment flow with Kafka events
 - **Data Consistency**: Optimistic locking for seat management
@@ -168,7 +168,7 @@ Environment variables:
 
 ## Key Design Decisions
 
-1. **Redis Caching**: 40% of top searches cached with LRU eviction
+1. **Redis Caching**: Caching serach results in redis 
 2. **Distributed Locking**: Redis-based locks with 5-minute TTL for booking
 3. **Optimistic Locking**: Version-based concurrency control for seat updates
 4. **Async Payment**: Event-driven payment processing with Kafka

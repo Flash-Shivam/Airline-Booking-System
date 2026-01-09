@@ -1,24 +1,33 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
 
 	"airline-booking-system/internal/models"
-	"airline-booking-system/internal/services"
 
 	"github.com/gorilla/mux"
 )
 
-// FlightHandler handles flight-related HTTP requests
-type FlightHandler struct {
-	flightService *services.FlightService
+// FlightService defines the interface for flight-related business logic.
+// This allows the HTTP handlers to be unit tested with mocks.
+type FlightService interface {
+	SearchFlights(rctx context.Context, req *models.FlightSearchRequest) (*models.FlightSearchResponse, error)
+	GetFlightByID(rctx context.Context, id int64) (*models.Flight, error)
+	CreateFlight(rctx context.Context, flight *models.Flight) (*models.Flight, error)
+	UpdateFlight(rctx context.Context, flight *models.Flight) error
 }
 
-// NewFlightHandler creates a new flight handler
-func NewFlightHandler(flightService *services.FlightService) *FlightHandler {
+// FlightHandler handles flight-related HTTP requests.
+type FlightHandler struct {
+	flightService FlightService
+}
+
+// NewFlightHandler creates a new flight handler.
+func NewFlightHandler(flightService FlightService) *FlightHandler {
 	return &FlightHandler{
 		flightService: flightService,
 	}

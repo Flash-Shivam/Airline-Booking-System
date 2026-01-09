@@ -11,11 +11,25 @@ import (
 	"airline-booking-system/internal/repositories"
 )
 
+// FlightRepository defines the persistence operations used by FlightService.
+type FlightRepository interface {
+	SearchFlights(ctx context.Context, req *models.FlightSearchRequest) ([]models.Flight, error)
+	GetFlightByID(ctx context.Context, id int64) (*models.Flight, error)
+	CreateFlight(ctx context.Context, flight *models.Flight) (*models.Flight, error)
+	UpdateFlight(ctx context.Context, flight *models.Flight) error
+}
+
+// FlightCache defines the caching operations used by FlightService.
+type FlightCache interface {
+	GetCachedFlights(ctx context.Context, key string) ([]models.Flight, error)
+	SetCachedFlights(ctx context.Context, key string, flights []models.Flight) error
+}
+
 // FlightService handles flight business logic
 type FlightService struct {
-	flightRepo     *repositories.FlightRepository
-	cacheService   *cache.FlightCacheService
-	config         *config.AppConfig
+	flightRepo   FlightRepository
+	cacheService FlightCache
+	config       *config.AppConfig
 }
 
 // NewFlightService creates a new flight service

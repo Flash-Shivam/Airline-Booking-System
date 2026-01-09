@@ -1,23 +1,31 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"airline-booking-system/internal/models"
-	"airline-booking-system/internal/services"
 
 	"github.com/gorilla/mux"
 )
 
+// BookingService defines the interface for booking-related business logic.
+// This allows the HTTP handlers to be unit tested with mocks.
+type BookingService interface {
+	CreateBooking(rctx context.Context, req *models.BookingRequest) (*models.BookingResponse, error)
+	GetBookingByID(rctx context.Context, id int64) (*models.Booking, error)
+	GetBookingsByUserID(rctx context.Context, userID int64) ([]models.Booking, error)
+}
+
 // BookingHandler handles booking-related HTTP requests
 type BookingHandler struct {
-	bookingService *services.BookingService
+	bookingService BookingService
 }
 
 // NewBookingHandler creates a new booking handler
-func NewBookingHandler(bookingService *services.BookingService) *BookingHandler {
+func NewBookingHandler(bookingService BookingService) *BookingHandler {
 	return &BookingHandler{
 		bookingService: bookingService,
 	}

@@ -14,13 +14,40 @@ import (
 	"airline-booking-system/pkg/kafka"
 )
 
+// BookingRepository defines persistence operations used by BookingService.
+type BookingRepository interface {
+	CreateBooking(ctx context.Context, booking *models.Booking) (*models.Booking, error)
+	GetBookingByID(ctx context.Context, id int64) (*models.Booking, error)
+	GetBookingsByUserID(ctx context.Context, userID int64) ([]models.Booking, error)
+	UpdateBookingStatus(ctx context.Context, bookingID int64, status models.BookingStatus, paymentRefID *string) error
+}
+
+// FlightRepositoryBooking defines flight operations used by BookingService.
+type FlightRepositoryBooking interface {
+	GetFlightByID(ctx context.Context, id int64) (*models.Flight, error)
+	UpdateAvailableSeats(ctx context.Context, flightID int64, seatsToBook int, version int) error
+}
+
+// FlightCacheBooking defines cache operations used by BookingService.
+type FlightCacheBooking interface {
+	AcquireFlightLock(ctx context.Context, key string) (bool, error)
+	ReleaseFlightLock(ctx context.Context, key string) error
+	DeleteCachedSeats(ctx context.Context, flightID int64) error
+}
+
+// Producer defines the Kafka producer operations used by BookingService.
+type Producer interface {
+	SendSeatUpdateEvent(ctx context.Context, event *models.SeatUpdateEvent) error
+	SendPaymentEvent(ctx context.Context, event *models.PaymentEvent) error
+}
+
 // BookingService handles booking business logic
 type BookingService struct {
-	bookingRepo    *repositories.BookingRepository
-	flightRepo     *repositories.FlightRepository
-	cacheService   *cache.FlightCacheService
-	kafkaProducer  *kafka.Producer
-	config         *config.AppConfig
+	bookingRepo   BookingRepository
+	flightRepo    FlightRepositoryBooking
+	cacheService  FlightCacheBooking
+	kafkaProducer Producer
+	config        *config.AppConfig
 }
 
 // NewBookingService creates a new booking service
