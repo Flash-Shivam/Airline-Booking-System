@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.42
+	golang.org/x/time v0.7.0
 )
 
 require (

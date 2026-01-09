@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"airline-booking-system/pkg/redis"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -119,9 +122,11 @@ func setupRoutes(fh *handlers.FlightHandler, bh *handlers.BookingHandler) *mux.R
 		w.Write([]byte("OK"))
 	}).Methods("GET")
 
-	// Add middleware
+	// Add middleware (order matters)
 	router.Use(loggingMiddleware)
 	router.Use(corsMiddleware)
+	router.Use(rateLimitMiddleware)
+	router.Use(throttleMiddleware)
 
 	return router
 }
@@ -146,5 +151,77 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+// Simple per-IP rate limiter using golang.org/x/time/rate.
+// Defaults: 10 requests/second with a burst of 20 per IP.
+var (
+	ipLimiters   = make(map[string]*rate.Limiter)
+	ipLimitersMu sync.Mutex
+
+	requestsPerSecond = rate.Limit(10)
+	burstSize         = 20
+)
+
+func getIPLimiter(ip string) *rate.Limiter {
+	ipLimitersMu.Lock()
+	defer ipLimitersMu.Unlock()
+
+	limiter, exists := ipLimiters[ip]
+	if !exists {
+		limiter = rate.NewLimiter(requestsPerSecond, burstSize)
+		ipLimiters[ip] = limiter
+	}
+	return limiter
+}
+
+func rateLimitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			ip = r.RemoteAddr
+		}
+
+		if limiter := getIPLimiter(ip); !limiter.Allow() {
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte("Too Many Requests"))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// throttleMiddleware limits the total number of in-flight requests.
+// Defaults: at most 100 concurrent requests across the server.
+var (
+	maxInFlight     = 100
+	inFlightSem     = make(chan struct{}, maxInFlight)
+	throttleTimeout = 0 * time.Second // can be made >0 to wait before rejecting
+)
+
+func throttleMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if throttleTimeout <= 0 {
+			select {
+			case inFlightSem <- struct{}{}:
+				defer func() { <-inFlightSem }()
+				next.ServeHTTP(w, r)
+			default:
+				w.WriteHeader(http.StatusTooManyRequests)
+				_, _ = w.Write([]byte("Server is busy, please try again later"))
+			}
+			return
+		}
+
+		select {
+		case inFlightSem <- struct{}{}:
+			defer func() { <-inFlightSem }()
+			next.ServeHTTP(w, r)
+		case <-time.After(throttleTimeout):
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte("Server is busy, please try again later"))
+		}
 	})
 }
